@@ -1,0 +1,2715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CNC Design Studio</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a1a;
+            color: #e0e0e0;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: auto auto 1fr 350px;
+            grid-template-rows: 60px 1fr;
+            height: 100vh;
+        }
+
+        .header {
+            grid-column: 1 / -1;
+            background: #2a2a2a;
+            border-bottom: 2px solid #3a3a3a;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .header .machine-info {
+            font-size: 12px;
+            color: #888;
+        }
+
+        .sidebar {
+            background: #222;
+            border-right: 1px solid #3a3a3a;
+            padding: 0;
+            overflow-y: auto;
+            width: 300px;
+            transition: width 0.3s ease, margin-left 0.3s ease;
+            position: relative;
+        }
+
+        .sidebar.collapsed {
+            width: 0;
+            margin-left: -1px;
+            overflow: hidden;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            background: #2a2a2a;
+            border-bottom: 1px solid #3a3a3a;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            user-select: none;
+            min-width: 300px;
+        }
+
+        .sidebar-header:hover {
+            background: #333;
+        }
+
+        .sidebar-header h2 {
+            font-size: 16px;
+            margin: 0;
+            color: #fff;
+            border: none;
+            padding: 0;
+        }
+
+        .collapse-icon {
+            font-size: 14px;
+            color: #999;
+            transition: transform 0.3s;
+        }
+
+        .sidebar.collapsed .collapse-icon {
+            transform: rotate(180deg);
+        }
+
+        .sidebar-content {
+            padding: 20px;
+            min-width: 300px;
+        }
+
+        /* Left vertical toolbar */
+        .left-toolbar {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            background: #1e1e1e;
+            border-right: 1px solid #3a3a3a;
+            flex-shrink: 0;
+            overflow-y: auto;
+        }
+
+        .left-tool-button {
+            padding: 15px 0;
+            background: #1e1e1e;
+            border: none;
+            border-right: 3px solid transparent;
+            color: #999;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            text-align: center;
+            width: 47px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .left-tool-button svg {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
+
+        .left-tool-button:hover {
+            background: #2a2a2a;
+            color: #fff;
+        }
+
+        .left-tool-button.active {
+            background: #2a2a2a;
+            border-right-color: #0066cc;
+            color: #fff;
+        }
+
+        .left-toolbar-divider {
+            height: 1px;
+            background: #3a3a3a;
+            margin: 8px 0;
+        }
+
+        .viewer {
+            position: relative;
+            background: #151515;
+        }
+
+        #canvas-container {
+            width: 100%;
+            height: 100%;
+        }
+
+        .controls {
+            background: #222;
+            border-left: 1px solid #3a3a3a;
+            padding: 0;
+            overflow-y: auto;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .part-list {
+            list-style: none;
+        }
+
+        .part-item {
+            padding: 12px;
+            margin-bottom: 8px;
+            background: #2a2a2a;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .part-item:hover {
+            background: #3a3a3a;
+        }
+
+        .part-item.active {
+            background: #0066cc;
+            color: white;
+        }
+
+        .param-group {
+            margin-bottom: 20px;
+        }
+
+        .param-group label {
+            display: block;
+            font-size: 13px;
+            margin-bottom: 6px;
+            color: #aaa;
+        }
+
+        .param-group input {
+            width: 100%;
+            padding: 8px;
+            background: #2a2a2a;
+            border: 1px solid #3a3a3a;
+            border-radius: 4px;
+            color: #e0e0e0;
+            font-size: 14px;
+        }
+
+        .param-group input:focus {
+            outline: none;
+            border-color: #0066cc;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: #0066cc;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 10px;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background: #0052a3;
+        }
+
+        .btn:disabled {
+            background: #444;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: #2a2a2a;
+        }
+
+        .btn-secondary:hover {
+            background: #3a3a3a;
+        }
+
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px 40px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .info-box {
+            background: #2a2a2a;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .info-box strong {
+            color: #fff;
+        }
+
+        .status {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-family: monospace;
+        }
+
+        .view-cube {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 150px;
+            height: 150px;
+            background: rgba(42, 42, 42, 0.95);
+            border: 1px solid #3a3a3a;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            cursor: pointer;
+            overflow: hidden;
+        }
+
+        #view-cube-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* Tab-based navigation styles */
+        .tabs-container {
+            display: flex;
+            height: 100%;
+            flex-direction: row;
+        }
+
+        .tabs-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            background: #1e1e1e;
+            border-left: 1px solid #3a3a3a;
+            flex-shrink: 0;
+            overflow-y: auto;
+            order: 2;
+        }
+
+        .tab-button {
+            padding: 15px 0;
+            background: #1e1e1e;
+            border: none;
+            border-left: 3px solid transparent;
+            color: #999;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            text-align: center;
+            width: 47px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .tab-button svg {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
+
+        .tab-button:hover {
+            background: #2a2a2a;
+            color: #fff;
+        }
+
+        .tab-button.active {
+            background: #2a2a2a;
+            border-left-color: #0066cc;
+            color: #fff;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 15px;
+            overflow-y: auto;
+            flex: 1;
+            order: 1;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Legacy panel header for Part Info section */
+        .panel-header h2 {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            border: none;
+            padding: 0;
+        }
+
+
+        .object-item {
+            background: #2a2a2a;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+
+        .object-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .object-name {
+            font-size: 13px;
+            font-weight: 500;
+            color: #fff;
+        }
+
+        .object-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .visibility-toggle {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: #999;
+            cursor: pointer;
+        }
+
+        .opacity-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .opacity-control label {
+            font-size: 11px;
+            color: #999;
+            margin: 0;
+        }
+
+        .opacity-control input[type="range"] {
+            flex: 1;
+        }
+
+        .opacity-control span {
+            font-size: 11px;
+            color: #999;
+            min-width: 35px;
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>CNC Design Studio</h1>
+            <div class="machine-info">Shapeoko 5 Pro (4' × 4')</div>
+        </div>
+
+        <!-- Left Toolbar -->
+        <div class="left-toolbar">
+            <!-- Projects Section -->
+            <button class="left-tool-button active" id="projects-btn" onclick="toggleSidebar()" title="Projects">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3,3H9V7H3V3M15,10H21V14H15V10M15,17H21V21H15V17M13,13H7V18H13V13Z"/>
+                </svg>
+            </button>
+
+            <div class="left-toolbar-divider"></div>
+
+            <!-- View Controls Section -->
+            <button class="left-tool-button active" id="rotate-tool-left" onclick="setTool('rotate')" title="Rotate">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12,4V1L8,5L12,9V6A6,6 0 0,1 18,12C18,13.57 17.35,15 16.27,16.03L17.69,17.45C19.26,16.08 20.25,14.14 20.25,12A8,8 0 0,0 12,4M12,18A6,6 0 0,1 6,12C6,10.43 6.65,9 7.73,7.97L6.31,6.55C4.74,7.92 3.75,9.86 3.75,12A8,8 0 0,0 12,20V23L16,19L12,15V18Z"/>
+                </svg>
+            </button>
+            <button class="left-tool-button" id="pan-tool-left" onclick="setTool('pan')" title="Hand">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M13,6V11H18V7.75L22.25,12L18,16.25V13H13V18H16.25L12,22.25L7.75,18H11V13H6V16.25L1.75,12L6,7.75V11H11V6H7.75L12,1.75L16.25,6H13Z"/>
+                </svg>
+            </button>
+
+            <div class="left-toolbar-divider"></div>
+
+            <!-- View Options Section -->
+            <button class="left-tool-button" id="toolpath-toggle-left" onclick="toggleToolpath()" title="Toolpath">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M21.71 20.29L20.29 21.71L12 13.41L3.71 21.71L2.29 20.29L10.59 12L2.29 3.71L3.71 2.29L12 10.59L20.29 2.29L21.71 3.71L13.41 12L21.71 20.29Z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                </svg>
+            </button>
+            <button class="left-tool-button" id="view-mode-toggle-left" onclick="toggleViewMode()" title="Assembled View">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M21,16.5C21,16.88 20.79,17.21 20.47,17.38L12.57,21.82C12.41,21.94 12.21,22 12,22C11.79,22 11.59,21.94 11.43,21.82L3.53,17.38C3.21,17.21 3,16.88 3,16.5V7.5C3,7.12 3.21,6.79 3.53,6.62L11.43,2.18C11.59,2.06 11.79,2 12,2C12.21,2 12.41,2.06 12.57,2.18L20.47,6.62C20.79,6.79 21,7.12 21,7.5V16.5M12,4.15L6.04,7.5L12,10.85L17.96,7.5L12,4.15M5,15.91L11,19.29V12.58L5,9.21V15.91M19,15.91V9.21L13,12.58V19.29L19,15.91Z"/>
+                </svg>
+            </button>
+            <button class="left-tool-button active" id="table-toggle-left" onclick="toggleMachineTable()" title="Show Machine Table">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4,4H20A2,2 0 0,1 22,6V18A2,2 0 0,1 20,20H4A2,2 0 0,1 2,18V6A2,2 0 0,1 4,4M4,6V18H20V6H4M6,8H18V10H6V8M6,12H18V14H6V12Z"/>
+                </svg>
+            </button>
+        </div>
+
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header" onclick="toggleSidebar()">
+                <h2>Projects</h2>
+                <span class="collapse-icon" id="sidebar-collapse-icon">◀</span>
+            </div>
+            <div class="sidebar-content" id="sidebar-content">
+                <ul class="part-list" id="part-list">
+                    <li class="loading">Loading parts...</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="viewer">
+            <div id="canvas-container"></div>
+            <div class="loading hidden" id="loading">Loading preview...</div>
+            <div class="status" id="status">Ready</div>
+
+            <!-- 3D View Cube Navigation -->
+            <div class="view-cube">
+                <canvas id="view-cube-canvas"></canvas>
+            </div>
+        </div>
+
+        <div class="controls">
+            <!-- Tab Navigation -->
+            <div class="tabs-container">
+                <div class="tabs-nav">
+                    <button class="tab-button active" onclick="switchTab('info')" title="Info" data-tab="info">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M11,9H13V7H11M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M11,17H13V11H11V17Z"/>
+                        </svg>
+                    </button>
+                    <button class="tab-button" onclick="switchTab('objects')" title="Objects" data-tab="objects">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2L2 7L12 12L22 7L12 2Z"/>
+                            <path d="M2 17L12 22L22 17"/>
+                            <path d="M2 12L12 17L22 12"/>
+                        </svg>
+                    </button>
+                    <button class="tab-button hidden" id="parameters-tab-btn" onclick="switchTab('parameters')" title="Parameters" data-tab="parameters">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M3 17V19H9V17H3M3 5V7H13V5H3M13 21V19H21V17H13V15H11V21H13M7 9V11H3V13H7V15H9V9H7M21 13V11H11V13H21M15 9H17V7H21V5H17V3H15V9Z"/>
+                        </svg>
+                    </button>
+                    <button class="tab-button" onclick="switchTab('cam')" title="CAM" data-tab="cam">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M21.71 20.29L20.29 21.71L12 13.41L3.71 21.71L2.29 20.29L10.59 12L2.29 3.71L3.71 2.29L12 10.59L20.29 2.29L21.71 3.71L13.41 12L21.71 20.29Z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                    </button>
+                    <button class="tab-button" onclick="switchTab('export')" title="Export" data-tab="export">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M14 2H6C4.89 2 4 2.9 4 4V20C4 21.11 4.89 22 6 22H18C19.11 22 20 21.11 20 20V8L14 2M18 20H6V4H13V9H18V20M12 19L8 15H10.5V12H13.5V15H16L12 19Z"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Info Tab -->
+                <div id="tab-info" class="tab-content active">
+                    <h3 style="margin-top: 0; margin-bottom: 15px; font-size: 16px; color: #fff;">Part Info</h3>
+                    <div class="info-box" id="part-info">
+                        Select a part from the list to begin.
+                    </div>
+                </div>
+
+                <!-- Objects Tab -->
+                <div id="tab-objects" class="tab-content">
+                    <!-- Visibility Controls -->
+                    <div style="margin-bottom: 12px; padding: 8px; background: #2a2a2a; border-radius: 4px; display: flex; gap: 8px;">
+                        <button class="btn btn-secondary" onclick="selectAllParts()" style="flex: 1; font-size: 11px; padding: 6px;">
+                            Select All
+                        </button>
+                        <button class="btn btn-secondary" onclick="unselectAllParts()" style="flex: 1; font-size: 11px; padding: 6px;">
+                            Unselect All
+                        </button>
+                    </div>
+
+                    <!-- Dynamic container for parts - populated by updateObjectsPanel() -->
+                    <div id="objects-list">
+                        <!-- Parts will be added here dynamically -->
+                    </div>
+
+                    <!-- Toolpath object (shown when toolpath is loaded) -->
+                    <div class="object-item" id="toolpath-object-control" style="display:none;">
+                        <div class="object-header">
+                            <span class="object-name">Toolpath</span>
+                            <div class="object-controls">
+                                <label class="visibility-toggle">
+                                    <input type="checkbox" id="toolpath-visibility-layer" checked onchange="toggleToolpathVisibilityLayer(this.checked)">
+                                    <span>Visible</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Parameters Tab -->
+                <div id="tab-parameters" class="tab-content">
+                    <div id="parameters-container"></div>
+                    <button class="btn" onclick="updatePreview()" style="margin-top: 10px;">Update Preview</button>
+                </div>
+
+                <!-- CAM Settings Tab -->
+                <div id="tab-cam" class="tab-content">
+                    <!-- Part Positioning Section -->
+                    <div style="margin-bottom: 20px; padding: 12px; background: #2a2a2a; border-radius: 6px;">
+                        <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px; color: #fff;">Part Positioning</div>
+                        <button class="btn btn-secondary" onclick="positionPartsOnSurface()" style="margin-bottom: 8px;">
+                            Flatten on Build Surface
+                        </button>
+                        <button class="btn btn-secondary" onclick="centerVisibleParts()" style="margin-bottom: 8px;">
+                            Place Visible Parts at Origin
+                        </button>
+                        <button class="btn btn-secondary" onclick="spacePartsForCutting()">
+                            Space Parts for Tool Clearance
+                        </button>
+                    </div>
+
+                    <!-- Toolpath Origin Section -->
+                    <div style="margin-bottom: 20px; padding: 12px; background: #2a2a2a; border-radius: 6px;">
+                        <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px; color: #fff;">Toolpath Origin</div>
+                        <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; cursor: pointer;">
+                            <input type="checkbox" id="zero-to-lower-left" checked onchange="updateToolpathOriginInfo()">
+                            <span>Zero to lower-left corner</span>
+                        </label>
+                        <div id="toolpath-origin-info" style="font-size: 11px; color: #999; margin-top: 8px; line-height: 1.4;">
+                            Toolpath origin will be at the lower-left corner of visible parts
+                        </div>
+                    </div>
+
+                    <!-- Tool Library Selection -->
+                    <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px; color: #fff;">Tool Library</div>
+                    <div class="param-group">
+                        <label>Material</label>
+                        <select id="material-select" onchange="onMaterialChange()" style="width: 100%; padding: 8px; background: #1a1a1a; border: 1px solid #3a3a3a; border-radius: 4px; color: #e0e0e0;">
+                            <option value="">Select material...</option>
+                        </select>
+                    </div>
+                    <div class="param-group">
+                        <label>Tool</label>
+                        <select id="tool-select" onchange="onToolChange()" style="width: 100%; padding: 8px; background: #1a1a1a; border: 1px solid #3a3a3a; border-radius: 4px; color: #e0e0e0;">
+                            <option value="">Select tool...</option>
+                        </select>
+                    </div>
+                    <div id="tool-notes" style="font-size: 11px; color: #999; margin-top: -8px; margin-bottom: 12px; line-height: 1.4;"></div>
+
+                    <!-- Tool Settings -->
+                    <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px; color: #fff;">Tool Settings</div>
+                    <div class="param-group">
+                        <label>Tool Diameter (mm)</label>
+                        <input type="number" id="tool-diameter" value="6.35" step="0.01">
+                    </div>
+                    <div class="param-group">
+                        <label>Material Thickness (mm)</label>
+                        <input type="number" id="material-thickness" value="12.0" step="0.1">
+                    </div>
+                    <div class="param-group">
+                        <label>Spindle RPM</label>
+                        <input type="number" id="spindle-rpm" value="18000" step="1000">
+                    </div>
+                    <div class="param-group">
+                        <label>Feed Rate (mm/min)</label>
+                        <input type="number" id="feed-rate" value="1500" step="100">
+                    </div>
+                    <div class="param-group">
+                        <label>Depth of Cut (mm)</label>
+                        <input type="number" id="depth-of-cut" value="3.0" step="0.1" min="0.1">
+                    </div>
+
+                    <!-- Toolpath Preview Button -->
+                    <button class="btn" onclick="toggleToolpath()" id="generate-toolpath-btn" style="margin-top: 15px;">
+                        <span id="toolpath-btn-label">Show Toolpath Preview</span>
+                    </button>
+
+                    <!-- Legend (shown when toolpath exists) -->
+                    <div id="toolpath-legend" style="display:none; margin-top: 15px; margin-bottom: 15px;">
+                        <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px; color: #fff;">Toolpath Legend</div>
+                        <div style="display: flex; flex-direction: column; gap: 8px; background: #2a2a2a; padding: 10px; border-radius: 4px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div style="width: 30px; height: 3px; background: #ff3333; border-radius: 2px;"></div>
+                                <span style="font-size: 12px;">Cutting</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div style="width: 30px; height: 2px; background: #ffff00; border-radius: 2px;"></div>
+                                <span style="font-size: 12px;">Rapid</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div style="width: 30px; height: 2px; background: #00ffff; opacity: 0.5; border-radius: 2px;"></div>
+                                <span style="font-size: 12px;">Bounds</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Toolpath Simulation Controls (shown when toolpath exists) -->
+                    <div id="simulation-controls" style="display:none; margin-bottom: 15px;">
+                        <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px; color: #fff;">Toolpath Simulation</div>
+                        <div style="background: #2a2a2a; padding: 12px; border-radius: 4px;">
+                            <!-- Playback buttons -->
+                            <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                                <button class="btn btn-secondary" onclick="playSimulation()" style="flex: 1; font-size: 11px; padding: 8px;">
+                                    ▶ Play
+                                </button>
+                                <button class="btn btn-secondary" onclick="pauseSimulation()" style="flex: 1; font-size: 11px; padding: 8px;">
+                                    ⏸ Pause
+                                </button>
+                                <button class="btn btn-secondary" onclick="resetSimulation()" style="flex: 1; font-size: 11px; padding: 8px;">
+                                    ⏹ Reset
+                                </button>
+                            </div>
+
+                            <!-- Speed control -->
+                            <div style="margin-bottom: 8px;">
+                                <label style="font-size: 11px; display: block; margin-bottom: 4px;">
+                                    Speed: <span id="simulation-speed-value">1.0x</span>
+                                </label>
+                                <input type="range"
+                                       min="0.1"
+                                       max="5.0"
+                                       step="0.1"
+                                       value="1.0"
+                                       onchange="setSimulationSpeed(this.value)"
+                                       style="width: 100%;">
+                            </div>
+
+                            <!-- Progress indicator -->
+                            <div style="font-size: 11px; color: #999;">
+                                Progress: <span id="simulation-progress">0%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Panel selection (shown when toolpath exists) -->
+                    <div id="panel-selection" style="display:none;">
+                        <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px; color: #fff;">Panels to Cut</div>
+                        <div style="font-size: 11px; color: #999; margin-bottom: 8px;">Select which panels to include:</div>
+                        <div style="display: flex; flex-direction: column; gap: 6px;">
+                            <label style="display: flex; align-items: center; gap: 8px; font-size: 12px;">
+                                <input type="checkbox" checked onchange="togglePartVisibility('front', this.checked)"> Front
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; font-size: 12px;">
+                                <input type="checkbox" checked onchange="togglePartVisibility('back', this.checked)"> Back
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; font-size: 12px;">
+                                <input type="checkbox" checked onchange="togglePartVisibility('left', this.checked)"> Left
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; font-size: 12px;">
+                                <input type="checkbox" checked onchange="togglePartVisibility('right', this.checked)"> Right
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; font-size: 12px;">
+                                <input type="checkbox" checked onchange="togglePartVisibility('bottom', this.checked)"> Bottom
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Export Tab -->
+                <div id="tab-export" class="tab-content">
+                    <!-- Project Management -->
+                    <div style="margin-bottom: 20px; padding: 12px; background: #2a2a2a; border-radius: 6px;">
+                        <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px; color: #fff;">Project</div>
+                        <div class="param-group">
+                            <label>Project Name</label>
+                            <input type="text" id="project-name" placeholder="my-project" style="width: 100%; padding: 8px; background: #1a1a1a; border: 1px solid #3a3a3a; border-radius: 4px; color: #e0e0e0;">
+                        </div>
+                        <button class="btn" onclick="saveProject()" style="margin-bottom: 8px;">Save Project</button>
+                        <button class="btn btn-secondary" onclick="loadProjectDialog()">Load Project</button>
+                    </div>
+
+                    <!-- File Export -->
+                    <div style="margin-bottom: 10px; padding: 12px; background: #2a2a2a; border-radius: 6px;">
+                        <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px; color: #fff;">Export Files</div>
+                        <button class="btn" onclick="generateGCode()" id="generate-btn">Generate G-code</button>
+                        <button class="btn btn-secondary" onclick="exportSTEP()" style="margin-top: 8px;">Export STEP</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script>
+        let scene, camera, renderer, meshes = {}, gridHelper;
+        let currentPart = null;
+        let controls;
+
+        // View cube variables
+        let viewCubeScene, viewCubeCamera, viewCubeRenderer, viewCubeMesh;
+        let viewCubeRaycaster, viewCubeMouse;
+
+        // Initialize Three.js scene
+        function initScene() {
+            const container = document.getElementById('canvas-container');
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+
+            // Scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x151515);
+
+            // Camera - positioned for top-down CNC bed view
+            camera = new THREE.PerspectiveCamera(45, width / height, 1, 10000);
+            camera.position.set(600, 600, 800);  // Above the cutting area
+            camera.lookAt(600, 600, 0);  // Looking down at the cutting bed (Z=0)
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(width, height);
+            container.appendChild(renderer.domElement);
+
+            // Lights
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+
+            const directionalLight1 = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight1.position.set(1, 1, 1);
+            scene.add(directionalLight1);
+
+            const directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.4);
+            directionalLight2.position.set(-1, -1, -1);
+            scene.add(directionalLight2);
+
+            // Shapeoko 5 Pro: 4' × 4' = 1219mm × 1219mm cutting area
+            const machineWidth = 1219;  // mm
+            const machineDepth = 1219;  // mm
+
+            // Grid on XY plane (CNC build surface at Z=0)
+            // Position grid so origin (0,0) is at lower-left front corner
+            gridHelper = new THREE.GridHelper(machineWidth, 20, 0x444444, 0x222222);
+            gridHelper.rotation.x = Math.PI / 2;  // Rotate to XY plane
+            gridHelper.position.set(machineWidth / 2, machineDepth / 2, 0);  // Center grid in machine area
+            scene.add(gridHelper);
+
+            // Machine table outline (Shapeoko 5 Pro cutting area)
+            const tableGeometry = new THREE.PlaneGeometry(machineWidth, machineDepth);
+            const tableMaterial = new THREE.MeshBasicMaterial({
+                color: 0x4a4a4a,
+                side: THREE.DoubleSide,
+                transparent: true,
+                opacity: 0.15
+            });
+            const machineTable = new THREE.Mesh(tableGeometry, tableMaterial);
+            machineTable.position.set(machineWidth / 2, machineDepth / 2, -0.5);  // Slightly below Z=0
+            machineTable.name = 'machineTable';
+            scene.add(machineTable);
+
+            // Machine table border
+            const borderGeometry = new THREE.EdgesGeometry(tableGeometry);
+            const borderMaterial = new THREE.LineBasicMaterial({ color: 0xff6600, linewidth: 2 });
+            const machineBorder = new THREE.LineSegments(borderGeometry, borderMaterial);
+            machineBorder.position.set(machineWidth / 2, machineDepth / 2, -0.5);
+            machineBorder.name = 'machineBorder';
+            scene.add(machineBorder);
+
+            // Hybrid Table (per Shapeoko 5 Pro 4x4 Assembly Manual)
+            // 12 aluminum extrusions alternating with 12 MDF strips
+            // Running left-to-right (X-direction) across the machine depth (Y-direction)
+            const numExtrusions = 12;
+            const numMdfStrips = 12;
+
+            // Component dimensions (based on assembly manual)
+            const extrusionWidth = 60;    // mm (aluminum extrusion profile width)
+            const extrusionHeight = 10;   // mm (extrusion profile height)
+            const mdfStripWidth = 35;     // mm (MDF strip width, sits inside extrusion)
+            const mdfStripHeight = 8;     // mm (MDF thickness)
+            const componentDepth = machineDepth; // mm (full Y-direction depth)
+
+            // Calculate spacing to distribute evenly across machine width
+            const totalPairs = 12;
+            const spacing = machineWidth / totalPairs;
+
+            // Aluminum extrusion material (anodized aluminum - dark gray)
+            const aluminumMaterial = new THREE.MeshLambertMaterial({
+                color: 0x696969,
+                metalness: 0.8,
+                side: THREE.DoubleSide
+            });
+
+            // MDF material (light brown/tan)
+            const mdfMaterial = new THREE.MeshLambertMaterial({
+                color: 0xc9a86a,
+                side: THREE.DoubleSide
+            });
+
+            // Create 12 alternating aluminum extrusion + MDF strip pairs
+            for (let i = 0; i < totalPairs; i++) {
+                // Calculate X position for this pair (centered in each section)
+                const xPos = (i + 0.5) * spacing;
+
+                // Create aluminum extrusion
+                const extrusionGeometry = new THREE.BoxGeometry(extrusionWidth, componentDepth, extrusionHeight);
+                const extrusion = new THREE.Mesh(extrusionGeometry, aluminumMaterial);
+
+                // Position at table surface (Z = 0 is top of table)
+                // Extrusion sits with top surface at Z = 0
+                extrusion.position.set(xPos, machineDepth / 2, -extrusionHeight / 2);
+                extrusion.name = `aluminumExtrusion${i}`;
+                scene.add(extrusion);
+
+                // Add extrusion edges for definition
+                const extrusionEdges = new THREE.EdgesGeometry(extrusionGeometry);
+                const extrusionEdgeMaterial = new THREE.LineBasicMaterial({ color: 0x404040, linewidth: 1 });
+                const extrusionLines = new THREE.LineSegments(extrusionEdges, extrusionEdgeMaterial);
+                extrusionLines.position.copy(extrusion.position);
+                extrusionLines.name = `aluminumExtrusionEdge${i}`;
+                scene.add(extrusionLines);
+
+                // Create MDF strip (sits inside the extrusion, slightly recessed)
+                const mdfGeometry = new THREE.BoxGeometry(mdfStripWidth, componentDepth, mdfStripHeight);
+                const mdfStrip = new THREE.Mesh(mdfGeometry, mdfMaterial);
+
+                // MDF strip sits inside extrusion, slightly below top surface
+                const mdfZOffset = -1; // mm below extrusion top surface
+                mdfStrip.position.set(xPos, machineDepth / 2, mdfZOffset - mdfStripHeight / 2);
+                mdfStrip.name = `mdfStrip${i}`;
+                scene.add(mdfStrip);
+
+                // Add MDF strip edges
+                const mdfEdges = new THREE.EdgesGeometry(mdfGeometry);
+                const mdfEdgeMaterial = new THREE.LineBasicMaterial({ color: 0x8b7355, linewidth: 1 });
+                const mdfLines = new THREE.LineSegments(mdfEdges, mdfEdgeMaterial);
+                mdfLines.position.copy(mdfStrip.position);
+                mdfLines.name = `mdfStripEdge${i}`;
+                scene.add(mdfLines);
+            }
+
+            // Axes with standard CNC colors: X=red, Y=green, Z=blue
+            // Origin at (0, 0, 0) - lower-left front corner
+            const axesHelper = new THREE.AxesHelper(300);
+            scene.add(axesHelper);
+
+            // Add axis labels and grid measurements
+            function makeTextSprite(message, color, size = 48) {
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                canvas.width = 128;
+                canvas.height = 64;
+
+                context.font = `Bold ${size}px Arial`;
+                context.fillStyle = color;
+                context.textAlign = 'center';
+                context.textBaseline = 'middle';
+                context.fillText(message, 64, 32);
+
+                const texture = new THREE.CanvasTexture(canvas);
+                const spriteMaterial = new THREE.SpriteMaterial({ map: texture });
+                const sprite = new THREE.Sprite(spriteMaterial);
+                const scale = size / 48 * 30;
+                sprite.scale.set(scale * 2, scale, 1);
+                return sprite;
+            }
+
+            // X axis label (red)
+            const xLabel = makeTextSprite('X', '#ff0000');
+            xLabel.position.set(320, 0, 0);
+            scene.add(xLabel);
+
+            // Y axis label (green)
+            const yLabel = makeTextSprite('Y', '#00ff00');
+            yLabel.position.set(0, 320, 0);
+            scene.add(yLabel);
+
+            // Z axis label (blue)
+            const zLabel = makeTextSprite('Z', '#0000ff');
+            zLabel.position.set(0, 0, 320);
+            scene.add(zLabel);
+
+            // Add grid measurements (every 200mm from origin)
+            for (let i = 0; i <= machineWidth; i += 200) {
+                if (i !== 0) {
+                    // X-axis labels
+                    const xLabel = makeTextSprite(i + 'mm', '#666666', 20);
+                    xLabel.position.set(i, -40, 0);
+                    scene.add(xLabel);
+
+                    // Y-axis labels
+                    const yLabel = makeTextSprite(i + 'mm', '#666666', 20);
+                    yLabel.position.set(-40, i, 0);
+                    scene.add(yLabel);
+                }
+            }
+
+            // Origin label
+            const originLabel = makeTextSprite('(0,0)', '#ffffff', 20);
+            originLabel.position.set(-30, -30, 0);
+            scene.add(originLabel);
+
+            // OrbitControls for pan, rotate, zoom
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.screenSpacePanning = true;  // Enable panning
+            controls.minDistance = 100;
+            controls.maxDistance = 2000;
+            controls.target.set(machineWidth / 2, machineDepth / 2, 0);  // Center on machine cutting area
+
+            // Mouse button configuration
+            controls.mouseButtons = {
+                LEFT: THREE.MOUSE.ROTATE,
+                MIDDLE: THREE.MOUSE.PAN,
+                RIGHT: THREE.MOUSE.PAN
+            };
+
+            // Enable touch/trackpad gestures
+            controls.enableZoom = true;
+            controls.enableRotate = true;
+            controls.enablePan = true;
+            controls.zoomSpeed = 1.2;  // Adjust zoom sensitivity
+
+            // Touch configuration for mobile/trackpad
+            controls.touches = {
+                ONE: THREE.TOUCH.ROTATE,
+                TWO: THREE.TOUCH.DOLLY_PAN  // Two-finger: zoom and pan (standard trackpad behavior)
+            };
+
+            // Handle window resize
+            window.addEventListener('resize', onWindowResize);
+
+            animate();
+        }
+
+        // Initialize 3D View Cube
+        function initViewCube() {
+            const canvas = document.getElementById('view-cube-canvas');
+            const size = 150;
+
+            // Scene
+            viewCubeScene = new THREE.Scene();
+            viewCubeScene.background = new THREE.Color(0x2a2a2a);
+
+            // Camera
+            viewCubeCamera = new THREE.PerspectiveCamera(50, 1, 0.1, 1000);
+            viewCubeCamera.position.set(2, 2, 2);
+            viewCubeCamera.lookAt(0, 0, 0);
+
+            // Renderer with high pixel ratio for sharp text
+            viewCubeRenderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+            viewCubeRenderer.setPixelRatio(window.devicePixelRatio || 2);
+            viewCubeRenderer.setSize(size, size);
+
+            // Create cube with different materials for each face
+            const geometry = new THREE.BoxGeometry(1, 1, 1);
+
+            // Create materials for each face with labels
+            const createFaceMaterial = (text, color) => {
+                const canvas = document.createElement('canvas');
+                canvas.width = 256;  // Higher resolution for sharper text
+                canvas.height = 256;
+                const ctx = canvas.getContext('2d');
+
+                // Enable text smoothing
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+
+                // Background
+                ctx.fillStyle = color;
+                ctx.fillRect(0, 0, 256, 256);
+
+                // Border
+                ctx.strokeStyle = '#000000';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(0, 0, 256, 256);
+
+                // Text with shadow for better readability
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+                ctx.shadowBlur = 2;
+                ctx.shadowOffsetX = 1;
+                ctx.shadowOffsetY = 1;
+
+                ctx.fillStyle = '#000000';
+                ctx.font = 'bold 32px Arial';  // Larger, bolder text
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(text, 128, 128);
+
+                const texture = new THREE.CanvasTexture(canvas);
+                texture.minFilter = THREE.LinearFilter;
+                texture.magFilter = THREE.LinearFilter;
+                return new THREE.MeshBasicMaterial({ map: texture });
+            };
+
+            const materials = [
+                createFaceMaterial('RIGHT', '#e0c0a0'),  // Right (positive X)
+                createFaceMaterial('LEFT', '#c0a080'),   // Left (negative X)
+                createFaceMaterial('TOP', '#f0d0b0'),    // Top (positive Y)
+                createFaceMaterial('BOTTOM', '#b09070'), // Bottom (negative Y)
+                createFaceMaterial('FRONT', '#d0b090'),  // Front (positive Z)
+                createFaceMaterial('BACK', '#a08060')    // Back (negative Z)
+            ];
+
+            viewCubeMesh = new THREE.Mesh(geometry, materials);
+            viewCubeScene.add(viewCubeMesh);
+
+            // Add colored axis-aligned edges
+            // X-axis edges (red) - left/right
+            const xEdgesMaterial = new THREE.LineBasicMaterial({ color: 0xff0000, linewidth: 2 });
+            const xEdgesGeometry = new THREE.BufferGeometry();
+            const xEdgesVertices = new Float32Array([
+                // Right face (X+) edges
+                0.5, -0.5, -0.5,  0.5, 0.5, -0.5,
+                0.5, 0.5, -0.5,   0.5, 0.5, 0.5,
+                0.5, 0.5, 0.5,    0.5, -0.5, 0.5,
+                0.5, -0.5, 0.5,   0.5, -0.5, -0.5,
+                // Left face (X-) edges
+                -0.5, -0.5, -0.5, -0.5, 0.5, -0.5,
+                -0.5, 0.5, -0.5,  -0.5, 0.5, 0.5,
+                -0.5, 0.5, 0.5,   -0.5, -0.5, 0.5,
+                -0.5, -0.5, 0.5,  -0.5, -0.5, -0.5,
+            ]);
+            xEdgesGeometry.setAttribute('position', new THREE.BufferAttribute(xEdgesVertices, 3));
+            const xEdges = new THREE.LineSegments(xEdgesGeometry, xEdgesMaterial);
+            viewCubeMesh.add(xEdges);
+
+            // Y-axis edges (green) - top/bottom
+            const yEdgesMaterial = new THREE.LineBasicMaterial({ color: 0x00ff00, linewidth: 2 });
+            const yEdgesGeometry = new THREE.BufferGeometry();
+            const yEdgesVertices = new Float32Array([
+                // Top face (Y+) edges
+                -0.5, 0.5, -0.5,  0.5, 0.5, -0.5,
+                0.5, 0.5, -0.5,   0.5, 0.5, 0.5,
+                0.5, 0.5, 0.5,   -0.5, 0.5, 0.5,
+                -0.5, 0.5, 0.5,  -0.5, 0.5, -0.5,
+                // Bottom face (Y-) edges
+                -0.5, -0.5, -0.5,  0.5, -0.5, -0.5,
+                0.5, -0.5, -0.5,   0.5, -0.5, 0.5,
+                0.5, -0.5, 0.5,   -0.5, -0.5, 0.5,
+                -0.5, -0.5, 0.5,  -0.5, -0.5, -0.5,
+            ]);
+            yEdgesGeometry.setAttribute('position', new THREE.BufferAttribute(yEdgesVertices, 3));
+            const yEdges = new THREE.LineSegments(yEdgesGeometry, yEdgesMaterial);
+            viewCubeMesh.add(yEdges);
+
+            // Z-axis edges (blue) - front/back
+            const zEdgesMaterial = new THREE.LineBasicMaterial({ color: 0x0000ff, linewidth: 2 });
+            const zEdgesGeometry = new THREE.BufferGeometry();
+            const zEdgesVertices = new Float32Array([
+                // Front face (Z+) edges
+                -0.5, -0.5, 0.5,   0.5, -0.5, 0.5,
+                0.5, -0.5, 0.5,    0.5, 0.5, 0.5,
+                0.5, 0.5, 0.5,    -0.5, 0.5, 0.5,
+                -0.5, 0.5, 0.5,   -0.5, -0.5, 0.5,
+                // Back face (Z-) edges
+                -0.5, -0.5, -0.5,  0.5, -0.5, -0.5,
+                0.5, -0.5, -0.5,   0.5, 0.5, -0.5,
+                0.5, 0.5, -0.5,   -0.5, 0.5, -0.5,
+                -0.5, 0.5, -0.5,  -0.5, -0.5, -0.5,
+            ]);
+            zEdgesGeometry.setAttribute('position', new THREE.BufferAttribute(zEdgesVertices, 3));
+            const zEdges = new THREE.LineSegments(zEdgesGeometry, zEdgesMaterial);
+            viewCubeMesh.add(zEdges);
+
+            // Raycaster for click detection
+            viewCubeRaycaster = new THREE.Raycaster();
+            viewCubeMouse = new THREE.Vector2();
+
+            // Click handler
+            canvas.addEventListener('click', onViewCubeClick);
+            canvas.addEventListener('mousemove', onViewCubeMouseMove);
+
+            renderViewCube();
+        }
+
+        function onViewCubeMouseMove(event) {
+            const canvas = document.getElementById('view-cube-canvas');
+            const rect = canvas.getBoundingClientRect();
+            viewCubeMouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            viewCubeMouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+            // Change cursor on hover
+            viewCubeRaycaster.setFromCamera(viewCubeMouse, viewCubeCamera);
+            const intersects = viewCubeRaycaster.intersectObject(viewCubeMesh);
+            canvas.style.cursor = intersects.length > 0 ? 'pointer' : 'default';
+        }
+
+        function onViewCubeClick(event) {
+            const canvas = document.getElementById('view-cube-canvas');
+            const rect = canvas.getBoundingClientRect();
+            viewCubeMouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            viewCubeMouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+            viewCubeRaycaster.setFromCamera(viewCubeMouse, viewCubeCamera);
+            const intersects = viewCubeRaycaster.intersectObject(viewCubeMesh);
+
+            if (intersects.length > 0) {
+                const faceIndex = Math.floor(intersects[0].faceIndex / 2);
+                const views = ['right', 'left', 'top', 'bottom', 'front', 'back'];
+                setView(views[faceIndex]);
+            }
+        }
+
+        function updateViewCube() {
+            if (!viewCubeMesh || !camera) return;
+
+            // Get camera's rotation and apply inverse to cube
+            const cameraDirection = new THREE.Vector3();
+            camera.getWorldDirection(cameraDirection);
+
+            // Calculate rotation to match camera orientation
+            const euler = new THREE.Euler();
+            euler.setFromQuaternion(camera.quaternion);
+
+            // Invert rotation so cube shows current view
+            viewCubeMesh.rotation.copy(euler);
+            viewCubeMesh.rotation.x *= -1;
+            viewCubeMesh.rotation.y *= -1;
+            viewCubeMesh.rotation.z *= -1;
+        }
+
+        function renderViewCube() {
+            if (!viewCubeRenderer || !viewCubeScene || !viewCubeCamera) return;
+            updateViewCube();
+            viewCubeRenderer.render(viewCubeScene, viewCubeCamera);
+        }
+
+        function onWindowResize() {
+            const container = document.getElementById('canvas-container');
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        }
+
+        // Tool switching - toggle between rotate and pan modes
+        let currentTool = 'rotate';
+        let currentViewMode = 'flat';  // 'flat' (cutting layout) or 'assembled' (3D preview)
+
+        function setTool(tool) {
+            currentTool = tool;
+
+            // Update left toolbar button states
+            document.getElementById('rotate-tool-left').classList.toggle('active', tool === 'rotate');
+            document.getElementById('pan-tool-left').classList.toggle('active', tool === 'pan');
+
+            // Update OrbitControls mouse button mappings
+            if (tool === 'rotate') {
+                controls.mouseButtons = {
+                    LEFT: THREE.MOUSE.ROTATE,
+                    MIDDLE: THREE.MOUSE.PAN,
+                    RIGHT: THREE.MOUSE.PAN
+                };
+            } else if (tool === 'pan') {
+                controls.mouseButtons = {
+                    LEFT: THREE.MOUSE.PAN,
+                    MIDDLE: THREE.MOUSE.PAN,
+                    RIGHT: THREE.MOUSE.PAN
+                };
+            }
+        }
+
+        // View cube navigation - set camera to standard CAD views
+        function setView(view) {
+            const distance = 800;
+
+            // Calculate center from all meshes' bounds if available, otherwise use origin
+            let centerX = 0, centerY = 0, centerZ = 0;
+
+            // Get combined bounding box from all meshes
+            const meshList = Object.values(meshes);
+            if (meshList.length > 0) {
+                let minX = Infinity, minY = Infinity, minZ = Infinity;
+                let maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity;
+
+                meshList.forEach(mesh => {
+                    if (mesh.geometry.boundingBox) {
+                        const bbox = mesh.geometry.boundingBox;
+                        minX = Math.min(minX, bbox.min.x);
+                        minY = Math.min(minY, bbox.min.y);
+                        minZ = Math.min(minZ, bbox.min.z);
+                        maxX = Math.max(maxX, bbox.max.x);
+                        maxY = Math.max(maxY, bbox.max.y);
+                        maxZ = Math.max(maxZ, bbox.max.z);
+                    } else {
+                        mesh.geometry.computeBoundingBox();
+                    }
+                });
+
+                if (minX !== Infinity) {
+                    centerX = (minX + maxX) / 2;
+                    centerY = (minY + maxY) / 2;
+                    centerZ = (minZ + maxZ) / 2;
+                }
+            }
+
+            const views = {
+                // Standard orthographic views
+                'front': { pos: [centerX, centerY - distance, centerZ], look: [centerX, centerY, centerZ] },
+                'back': { pos: [centerX, centerY + distance, centerZ], look: [centerX, centerY, centerZ] },
+                'left': { pos: [centerX - distance, centerY, centerZ], look: [centerX, centerY, centerZ] },
+                'right': { pos: [centerX + distance, centerY, centerZ], look: [centerX, centerY, centerZ] },
+                'top': { pos: [centerX, centerY, distance], look: [centerX, centerY, centerZ] },
+                'bottom': { pos: [centerX, centerY, -distance], look: [centerX, centerY, centerZ] },
+
+                // Isometric corner views
+                'top-left': { pos: [centerX - distance*0.7, centerY + distance*0.7, distance*0.7], look: [centerX, centerY, centerZ] },
+                'top-right': { pos: [centerX + distance*0.7, centerY + distance*0.7, distance*0.7], look: [centerX, centerY, centerZ] },
+                'bottom-left': { pos: [centerX - distance*0.7, centerY - distance*0.7, distance*0.7], look: [centerX, centerY, centerZ] },
+                'bottom-right': { pos: [centerX + distance*0.7, centerY - distance*0.7, distance*0.7], look: [centerX, centerY, centerZ] }
+            };
+
+            const viewConfig = views[view];
+            if (viewConfig) {
+                camera.position.set(...viewConfig.pos);
+                camera.lookAt(...viewConfig.look);
+                // Update controls target to center on the geometry
+                controls.target.set(centerX, centerY, centerZ);
+                controls.update();
+            }
+        }
+
+        // Toolpath visualization
+        let toolpathGroup = null;
+        let toolpathVisible = false;
+        let visibleParts = ['front', 'back', 'left', 'right', 'bottom']; // Track which parts should show toolpaths
+        let toolStartMarker = null;
+        let materialBoundsBox = null;
+
+        // Toolpath simulation variables
+        let simulationTool = null;
+        let simulationPath = [];
+        let simulationIndex = 0;
+        let simulationPlaying = false;
+        let simulationSpeed = 1.0;
+        let simulationAnimationId = null;
+
+        // Track part positioning offset (applied by centerVisibleParts, etc.)
+        let partOffsetX = 0;
+        let partOffsetY = 0;
+
+        async function toggleToolpath() {
+            console.log('toggleToolpath called, toolpathVisible:', toolpathVisible);
+            console.log('currentPart:', currentPart);
+
+            if (toolpathVisible) {
+                // Hide toolpath
+                if (toolpathGroup) {
+                    scene.remove(toolpathGroup);
+                }
+                if (toolStartMarker) {
+                    scene.remove(toolStartMarker);
+                }
+                if (materialBoundsBox) {
+                    scene.remove(materialBoundsBox);
+                }
+                toolpathVisible = false;
+                // Update left toolbar button
+                document.getElementById('toolpath-toggle-left').classList.remove('active');
+                // Update CAM Settings panel button
+                document.getElementById('toolpath-btn-label').textContent = 'Show Toolpath Preview';
+                // Hide legend, simulation controls, and panel selection
+                document.getElementById('toolpath-legend').style.display = 'none';
+                document.getElementById('simulation-controls').style.display = 'none';
+                document.getElementById('panel-selection').style.display = 'none';
+                // Hide toolpath object control
+                document.getElementById('toolpath-object-control').style.display = 'none';
+                // Update layer panel checkbox
+                if (document.getElementById('toolpath-visibility-layer')) {
+                    document.getElementById('toolpath-visibility-layer').checked = false;
+                }
+            } else {
+                // Show toolpath
+                await loadToolpath();
+                toolpathVisible = true;
+                // Update left toolbar button
+                document.getElementById('toolpath-toggle-left').classList.add('active');
+                // Update CAM Settings panel button
+                document.getElementById('toolpath-btn-label').textContent = 'Hide Toolpath Preview';
+                // Show legend, simulation controls, and panel selection
+                document.getElementById('toolpath-legend').style.display = 'block';
+                document.getElementById('simulation-controls').style.display = 'block';
+                document.getElementById('panel-selection').style.display = 'block';
+                // Show toolpath object control
+                document.getElementById('toolpath-object-control').style.display = 'block';
+                // Update layer panel checkbox
+                if (document.getElementById('toolpath-visibility-layer')) {
+                    document.getElementById('toolpath-visibility-layer').checked = true;
+                }
+            }
+        }
+
+        // Layer control functions - updated for individual parts
+        function toggleMeshVisibility(partName, isVisible) {
+            if (meshes[partName]) {
+                meshes[partName].visible = isVisible;
+            }
+        }
+
+        function updateMeshOpacity(partName, value) {
+            const opacity = value / 100;
+            const valueSpan = document.getElementById(`opacity-value-${partName}`);
+            if (valueSpan) {
+                valueSpan.textContent = value + '%';
+            }
+
+            if (meshes[partName] && meshes[partName].material) {
+                meshes[partName].material.opacity = opacity;
+                meshes[partName].material.transparent = opacity < 1.0;
+                meshes[partName].material.needsUpdate = true;
+            }
+        }
+
+        function selectAllParts() {
+            Object.keys(meshes).forEach(partName => {
+                const checkbox = document.getElementById(`visibility-${partName}`);
+                if (checkbox && !checkbox.checked) {
+                    checkbox.checked = true;
+                    toggleMeshVisibility(partName, true);
+                }
+            });
+            render();
+            document.getElementById('status').textContent = `All parts visible (${Object.keys(meshes).length} parts)`;
+        }
+
+        function unselectAllParts() {
+            Object.keys(meshes).forEach(partName => {
+                const checkbox = document.getElementById(`visibility-${partName}`);
+                if (checkbox && checkbox.checked) {
+                    checkbox.checked = false;
+                    toggleMeshVisibility(partName, false);
+                }
+            });
+            render();
+            document.getElementById('status').textContent = `All parts hidden (${Object.keys(meshes).length} parts)`;
+        }
+
+        // Update Objects panel with current parts
+        function updateObjectsPanel() {
+            const objectsList = document.getElementById('objects-list');
+            if (!objectsList) return;
+
+            objectsList.innerHTML = '';
+
+            // Create controls for each part
+            Object.keys(meshes).forEach(partName => {
+                const displayName = partName.charAt(0).toUpperCase() + partName.slice(1).replace('_', ' ');
+
+                const objectItem = document.createElement('div');
+                objectItem.className = 'object-item';
+
+                objectItem.innerHTML = `
+                    <div class="object-header">
+                        <span class="object-name">${displayName}</span>
+                        <div class="object-controls">
+                            <label class="visibility-toggle">
+                                <input type="checkbox"
+                                       id="visibility-${partName}"
+                                       checked
+                                       onchange="toggleMeshVisibility('${partName}', this.checked)">
+                                <span>Visible</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="opacity-control">
+                        <label>Opacity:</label>
+                        <input type="range"
+                               id="opacity-${partName}"
+                               min="0"
+                               max="100"
+                               value="100"
+                               oninput="updateMeshOpacity('${partName}', this.value)">
+                        <span id="opacity-value-${partName}">100%</span>
+                    </div>
+                `;
+
+                objectsList.appendChild(objectItem);
+            });
+
+            // If no parts, show message
+            if (Object.keys(meshes).length === 0) {
+                objectsList.innerHTML = '<p style="color: #999; padding: 10px;">No objects loaded</p>';
+            }
+        }
+
+        function toggleToolpathVisibilityLayer(isVisible) {
+            if (isVisible && !toolpathVisible) {
+                // Turn on toolpath using the main toggle
+                toggleToolpath();
+            } else if (!isVisible && toolpathVisible) {
+                // Turn off toolpath using the main toggle
+                toggleToolpath();
+            }
+        }
+
+        // Sidebar collapse/expand functionality
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const projectsBtn = document.getElementById('projects-btn');
+
+            sidebar.classList.toggle('collapsed');
+            projectsBtn.classList.toggle('active');
+        }
+
+        // Panel collapse/expand functionality
+        function switchTab(tabName) {
+            // Hide all tab contents
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(content => content.classList.remove('active'));
+
+            // Deactivate all tab buttons
+            const tabButtons = document.querySelectorAll('.tab-button');
+            tabButtons.forEach(button => button.classList.remove('active'));
+
+            // Show selected tab content
+            const selectedTab = document.getElementById(`tab-${tabName}`);
+            if (selectedTab) {
+                selectedTab.classList.add('active');
+            }
+
+            // Activate selected tab button
+            const buttons = document.querySelectorAll('.tab-button');
+            buttons.forEach(button => {
+                if (button.dataset.tab === tabName) {
+                    button.classList.add('active');
+                }
+            });
+        }
+
+        function togglePartVisibility(partName, isVisible) {
+            if (isVisible) {
+                // Add to visible parts if not already there
+                if (!visibleParts.includes(partName)) {
+                    visibleParts.push(partName);
+                }
+            } else {
+                // Remove from visible parts
+                visibleParts = visibleParts.filter(p => p !== partName);
+            }
+
+            // Reload toolpath if currently visible
+            if (toolpathVisible) {
+                loadToolpath();
+            }
+        }
+
+        async function loadToolpath() {
+            console.log('loadToolpath called');
+            if (!currentPart) {
+                console.error('No currentPart set!');
+                return;
+            }
+
+            // Get parameters
+            const params = {};
+            document.querySelectorAll('[id^="param-"]').forEach(input => {
+                const key = input.id.replace('param-', '');
+                params[key] = parseFloat(input.value);
+            });
+
+            const camConfig = {
+                tool_diameter: parseFloat(document.getElementById('tool-diameter').value),
+                material_thickness: parseFloat(document.getElementById('material-thickness').value),
+                spindle_rpm: parseInt(document.getElementById('spindle-rpm').value),
+                feed_rate: parseFloat(document.getElementById('feed-rate').value),
+                depth_of_cut: parseFloat(document.getElementById('depth-of-cut').value)
+            };
+
+            // Get which parts are visible/selected for toolpath
+            const selectedParts = Object.keys(meshes).filter(partName => {
+                const checkbox = document.getElementById(`visibility-${partName}`);
+                return checkbox && checkbox.checked;
+            });
+
+            console.log('Fetching toolpath with config:', camConfig);
+            console.log('Selected parts for toolpath:', selectedParts);
+
+            const response = await fetch(`/api/part/${currentPart}/toolpath`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    parameters: params,
+                    cam_config: camConfig,
+                    visible_parts: selectedParts
+                })
+            });
+
+            const data = await response.json();
+            console.log('Toolpath response:', data);
+
+            if (!data.success) {
+                console.error('Failed to load toolpath:', data.error);
+                return;
+            }
+
+            renderToolpaths(data.toolpaths);
+        }
+
+        function renderToolpaths(toolpaths) {
+            console.log('renderToolpaths called with:', toolpaths);
+            console.log('Number of toolpaths:', toolpaths ? toolpaths.length : 0);
+
+            // Remove existing toolpath
+            if (toolpathGroup) scene.remove(toolpathGroup);
+            if (toolStartMarker) scene.remove(toolStartMarker);
+            if (materialBoundsBox) scene.remove(materialBoundsBox);
+
+            toolpathGroup = new THREE.Group();
+
+            // Render rapid moves (yellow dashed lines - travel moves)
+            const rapidMaterial = new THREE.LineBasicMaterial({
+                color: 0xffff00,
+                linewidth: 2,
+                opacity: 0.6,
+                transparent: true,
+                linecap: 'round'
+            });
+
+            // Render feed moves (red solid lines - actual cutting)
+            const feedMaterial = new THREE.LineBasicMaterial({
+                color: 0xff3333,
+                linewidth: 3
+            });
+
+            // Render drill operation feed moves (blue - drilling)
+            const drillFeedMaterial = new THREE.LineBasicMaterial({
+                color: 0x3333ff,
+                linewidth: 3
+            });
+
+            // Loop through each part's toolpath
+            toolpaths.forEach((toolpathData, index) => {
+                console.log(`Processing toolpath ${index}:`, toolpathData);
+
+                // Get material bounds to filter out positioning rapids from machine origin
+                const bounds = toolpathData.material_bounds;
+                const boundsMargin = 50; // 50mm margin around part for filtering
+                const minX = bounds.min[0] - boundsMargin;
+                const maxX = bounds.max[0] + boundsMargin;
+                const minY = bounds.min[1] - boundsMargin;
+                const maxY = bounds.max[1] + boundsMargin;
+
+                // Check if this is a multi-operation toolpath
+                if (toolpathData.multi_operation && toolpathData.operations) {
+                    console.log(`  - Multi-operation toolpath with ${toolpathData.operations.length} operations`);
+
+                    // Process each operation separately
+                    toolpathData.operations.forEach((operation, opIndex) => {
+                        console.log(`    Operation ${opIndex}: ${operation.name} (${operation.type})`);
+                        console.log(`      - rapid_moves: ${operation.rapid_moves ? operation.rapid_moves.length : 0}`);
+                        console.log(`      - feed_moves: ${operation.feed_moves ? operation.feed_moves.length : 0}`);
+
+                        // Choose feed material based on operation type
+                        const opFeedMaterial = operation.type === 'drill' ? drillFeedMaterial : feedMaterial;
+
+                        // Render rapid moves for this operation
+                        if (operation.rapid_moves) {
+                            operation.rapid_moves.forEach(move => {
+                                const start = move[0];
+                                const end = move[1];
+
+                                // Skip rapid moves that start or end far outside the part bounds
+                                const startInBounds = start[0] >= minX && start[0] <= maxX &&
+                                                     start[1] >= minY && start[1] <= maxY;
+                                const endInBounds = end[0] >= minX && end[0] <= maxX &&
+                                                   end[1] >= minY && end[1] <= maxY;
+
+                                if (!startInBounds || !endInBounds) {
+                                    return; // Skip this rapid move
+                                }
+
+                                const points = [
+                                    new THREE.Vector3(start[0], start[1], start[2]),
+                                    new THREE.Vector3(end[0], end[1], end[2])
+                                ];
+                                const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                                const line = new THREE.Line(geometry, rapidMaterial);
+                                toolpathGroup.add(line);
+                            });
+                        }
+
+                        // Render feed moves for this operation
+                        if (operation.feed_moves) {
+                            operation.feed_moves.forEach(move => {
+                                const points = [
+                                    new THREE.Vector3(move[0][0], move[0][1], move[0][2]),
+                                    new THREE.Vector3(move[1][0], move[1][1], move[1][2])
+                                ];
+                                const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                                const line = new THREE.Line(geometry, opFeedMaterial);
+                                toolpathGroup.add(line);
+                            });
+                        }
+                    });
+                } else {
+                    // Single-operation toolpath (legacy format)
+                    console.log(`  - Single-operation toolpath`);
+                    console.log(`  - rapid_moves: ${toolpathData.rapid_moves ? toolpathData.rapid_moves.length : 0}`);
+                    console.log(`  - feed_moves: ${toolpathData.feed_moves ? toolpathData.feed_moves.length : 0}`);
+
+                    // Render rapid moves for this part (filter out long positioning moves from origin)
+                    if (toolpathData.rapid_moves) {
+                        toolpathData.rapid_moves.forEach(move => {
+                            const start = move[0];
+                            const end = move[1];
+
+                            // Skip rapid moves that start or end far outside the part bounds
+                            const startInBounds = start[0] >= minX && start[0] <= maxX &&
+                                                 start[1] >= minY && start[1] <= maxY;
+                            const endInBounds = end[0] >= minX && end[0] <= maxX &&
+                                               end[1] >= minY && end[1] <= maxY;
+
+                            if (!startInBounds || !endInBounds) {
+                                return; // Skip this rapid move
+                            }
+
+                            const points = [
+                                new THREE.Vector3(start[0], start[1], start[2]),
+                                new THREE.Vector3(end[0], end[1], end[2])
+                            ];
+                            const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                            const line = new THREE.Line(geometry, rapidMaterial);
+                            toolpathGroup.add(line);
+                        });
+                    }
+
+                    // Render feed moves for this part
+                    if (toolpathData.feed_moves) {
+                        toolpathData.feed_moves.forEach(move => {
+                            const points = [
+                                new THREE.Vector3(move[0][0], move[0][1], move[0][2]),
+                                new THREE.Vector3(move[1][0], move[1][1], move[1][2])
+                            ];
+                            const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                            const line = new THREE.Line(geometry, feedMaterial);
+                            toolpathGroup.add(line);
+                        });
+                    }
+                }
+
+                // Material bounds (cyan wireframe box for each part)
+                const boxGeometry = new THREE.BoxGeometry(
+                    bounds.size[0],
+                    bounds.size[1],
+                    bounds.size[2]
+                );
+                const boxMaterial = new THREE.MeshBasicMaterial({
+                    color: 0x00ffff,
+                    wireframe: true,
+                    opacity: 0.2,
+                    transparent: true
+                });
+                const boundsBox = new THREE.Mesh(boxGeometry, boxMaterial);
+                boundsBox.position.set(
+                    (bounds.min[0] + bounds.max[0]) / 2,
+                    (bounds.min[1] + bounds.max[1]) / 2,
+                    (bounds.min[2] + bounds.max[2]) / 2
+                );
+                toolpathGroup.add(boundsBox);
+            });
+
+            scene.add(toolpathGroup);
+
+            // Apply current part offset to toolpath so it aligns with visual part positions
+            toolpathGroup.position.x = partOffsetX;
+            toolpathGroup.position.y = partOffsetY;
+
+            // Build simulation path from toolpath data
+            buildSimulationPath(toolpaths);
+        }
+
+        // Build sequential path from toolpath data for simulation
+        function buildSimulationPath(toolpaths) {
+            simulationPath = [];
+
+            if (!toolpaths || toolpaths.length === 0) return;
+
+            toolpaths.forEach(toolpathData => {
+                // Check if this is a multi-operation toolpath
+                if (toolpathData.multi_operation && toolpathData.operations) {
+                    // Process each operation in sequence
+                    toolpathData.operations.forEach(operation => {
+                        // Add rapid moves for this operation
+                        if (operation.rapid_moves) {
+                            operation.rapid_moves.forEach(move => {
+                                simulationPath.push({
+                                    start: new THREE.Vector3(move[0][0], move[0][1], move[0][2]),
+                                    end: new THREE.Vector3(move[1][0], move[1][1], move[1][2]),
+                                    type: 'rapid',
+                                    operationType: operation.type,
+                                    operationName: operation.name
+                                });
+                            });
+                        }
+
+                        // Add feed moves for this operation
+                        if (operation.feed_moves) {
+                            operation.feed_moves.forEach(move => {
+                                simulationPath.push({
+                                    start: new THREE.Vector3(move[0][0], move[0][1], move[0][2]),
+                                    end: new THREE.Vector3(move[1][0], move[1][1], move[1][2]),
+                                    type: operation.type === 'drill' ? 'drill' : 'feed',
+                                    operationType: operation.type,
+                                    operationName: operation.name
+                                });
+                            });
+                        }
+                    });
+                } else {
+                    // Single-operation toolpath (legacy format)
+                    // Add rapid moves
+                    if (toolpathData.rapid_moves) {
+                        toolpathData.rapid_moves.forEach(move => {
+                            simulationPath.push({
+                                start: new THREE.Vector3(move[0][0], move[0][1], move[0][2]),
+                                end: new THREE.Vector3(move[1][0], move[1][1], move[1][2]),
+                                type: 'rapid'
+                            });
+                        });
+                    }
+
+                    // Add feed moves (cutting)
+                    if (toolpathData.feed_moves) {
+                        toolpathData.feed_moves.forEach(move => {
+                            simulationPath.push({
+                                start: new THREE.Vector3(move[0][0], move[0][1], move[0][2]),
+                                end: new THREE.Vector3(move[1][0], move[1][1], move[1][2]),
+                                type: 'feed'
+                            });
+                        });
+                    }
+                }
+            });
+
+            console.log(`Built simulation path with ${simulationPath.length} segments`);
+        }
+
+        // Create 3D tool model
+        function createToolModel() {
+            const toolDiameter = parseFloat(document.getElementById('tool-diameter').value);
+            const toolLength = 50; // mm
+
+            // Create tool group
+            const toolGroup = new THREE.Group();
+
+            // Cutting part (cylinder) - offset so tip is at Z=0 when group is at Z=0
+            const cuttingGeometry = new THREE.CylinderGeometry(
+                toolDiameter / 2,
+                toolDiameter / 2,
+                toolLength,
+                16
+            );
+            const cuttingMaterial = new THREE.MeshPhongMaterial({
+                color: 0xcccccc,
+                shininess: 100
+            });
+            const cuttingPart = new THREE.Mesh(cuttingGeometry, cuttingMaterial);
+            cuttingPart.rotation.x = Math.PI / 2; // Align with Z axis
+            cuttingPart.position.z = toolLength / 2; // Offset so tip is at group origin
+            toolGroup.add(cuttingPart);
+
+            // Shaft (thinner cylinder above cutting part)
+            const shaftGeometry = new THREE.CylinderGeometry(
+                toolDiameter / 4,
+                toolDiameter / 4,
+                30,
+                8
+            );
+            const shaftMaterial = new THREE.MeshPhongMaterial({
+                color: 0x888888
+            });
+            const shaft = new THREE.Mesh(shaftGeometry, shaftMaterial);
+            shaft.rotation.x = Math.PI / 2;
+            shaft.position.z = toolLength + 15; // Position above cutting part
+            toolGroup.add(shaft);
+
+            return toolGroup;
+        }
+
+        // Initialize simulation
+        function initializeSimulation() {
+            if (simulationPath.length === 0) {
+                document.getElementById('status').textContent = 'No toolpath loaded for simulation';
+                return false;
+            }
+
+            // Remove existing tool if any
+            if (simulationTool) {
+                scene.remove(simulationTool);
+            }
+
+            // Create tool model
+            simulationTool = createToolModel();
+            scene.add(simulationTool);
+
+            // Find the first feed move (actual cutting) to start simulation there
+            // This avoids starting at rapid moves from machine origin
+            let startIndex = 0;
+            for (let i = 0; i < simulationPath.length; i++) {
+                if (simulationPath[i].type === 'feed') {
+                    startIndex = i;
+                    break;
+                }
+            }
+            simulationIndex = startIndex;
+
+            // Position tool at first cutting location
+            const startSegment = simulationPath[simulationIndex];
+            if (startSegment) {
+                simulationTool.position.copy(startSegment.start);
+                // Apply part offset
+                simulationTool.position.x += partOffsetX;
+                simulationTool.position.y += partOffsetY;
+
+                // Start at safe height above material
+                const material_thickness = parseFloat(document.getElementById('material-thickness').value) || 12.0;
+                const safe_height = material_thickness + 10; // 10mm clearance above material
+                simulationTool.position.z = safe_height;
+            }
+
+            return true;
+        }
+
+        // Update tool position based on current simulation index
+        function updateToolPosition() {
+            if (!simulationTool || simulationPath.length === 0) return;
+
+            const segment = simulationPath[simulationIndex];
+            if (segment) {
+                simulationTool.position.copy(segment.start);
+                // Apply part offset so tool aligns with visual part positions
+                simulationTool.position.x += partOffsetX;
+                simulationTool.position.y += partOffsetY;
+
+                // Update progress indicator
+                const progress = ((simulationIndex / simulationPath.length) * 100).toFixed(1);
+                const progressEl = document.getElementById('simulation-progress');
+                if (progressEl) {
+                    progressEl.textContent = `${progress}%`;
+                }
+            }
+
+            render();
+        }
+
+        // Animation loop for simulation
+        function stepSimulation() {
+            if (!simulationPlaying || !simulationTool) return;
+
+            if (simulationIndex >= simulationPath.length - 1) {
+                // End of path
+                pauseSimulation();
+                document.getElementById('status').textContent = 'Simulation complete';
+                return;
+            }
+
+            const segment = simulationPath[simulationIndex];
+
+            // Move tool to current segment's end position
+            simulationTool.position.copy(segment.end);
+            // Apply part offset so tool aligns with visual part positions
+            simulationTool.position.x += partOffsetX;
+            simulationTool.position.y += partOffsetY;
+
+            // Advance to next segment (speed controls how many we skip)
+            simulationIndex += Math.max(1, Math.floor(simulationSpeed));
+
+            // Keep within bounds
+            if (simulationIndex >= simulationPath.length) {
+                simulationIndex = simulationPath.length - 1;
+            }
+
+            // Update progress indicator
+            const progress = ((simulationIndex / simulationPath.length) * 100).toFixed(1);
+            const progressEl = document.getElementById('simulation-progress');
+            if (progressEl) {
+                progressEl.textContent = `${progress}%`;
+            }
+
+            // Schedule next step using requestAnimationFrame
+            simulationAnimationId = requestAnimationFrame(stepSimulation);
+        }
+
+        // Playback controls
+        function playSimulation() {
+            if (simulationPath.length === 0) {
+                if (!initializeSimulation()) return;
+            }
+
+            if (!simulationTool && !initializeSimulation()) {
+                return;
+            }
+
+            simulationPlaying = true;
+            stepSimulation();
+            document.getElementById('status').textContent = 'Simulation playing...';
+        }
+
+        function pauseSimulation() {
+            simulationPlaying = false;
+            if (simulationAnimationId) {
+                clearTimeout(simulationAnimationId);
+                simulationAnimationId = null;
+            }
+            document.getElementById('status').textContent = 'Simulation paused';
+        }
+
+        function resetSimulation() {
+            pauseSimulation();
+            simulationIndex = 0;
+            updateToolPosition();
+            document.getElementById('status').textContent = 'Simulation reset';
+        }
+
+        function setSimulationSpeed(speed) {
+            simulationSpeed = parseFloat(speed);
+            document.getElementById('simulation-speed-value').textContent = speed + 'x';
+        }
+
+        // Toggle between flat (cutting layout) and assembled (3D preview) views
+        async function toggleViewMode() {
+            // Toggle the mode
+            currentViewMode = (currentViewMode === 'flat') ? 'assembled' : 'flat';
+
+            // Update left toolbar button state
+            document.getElementById('view-mode-toggle-left').classList.toggle('active', currentViewMode === 'assembled');
+
+            // Reload the preview with new view mode
+            await updatePreview();
+        }
+
+        // Toggle machine table visibility
+        function toggleMachineTable() {
+            const tableToggle = document.getElementById('table-toggle-left');
+            const isActive = tableToggle.classList.contains('active');
+
+            // Find machine table and border in scene
+            const table = scene.getObjectByName('machineTable');
+            const border = scene.getObjectByName('machineBorder');
+
+            if (table && border) {
+                table.visible = !isActive;
+                border.visible = !isActive;
+            }
+
+            // Toggle MDF slats visibility
+            scene.children.forEach(child => {
+                if (child.name && child.name.startsWith('mdfSlat')) {
+                    child.visible = !isActive;
+                }
+            });
+
+            // Toggle button state
+            tableToggle.classList.toggle('active');
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            if (controls) controls.update();  // For damping
+            renderer.render(scene, camera);
+            renderViewCube();  // Update view cube to match camera orientation
+        }
+
+        // Load and display mesh
+        // Helper function to create a mesh from mesh data
+        function createMeshFromData(meshData, name) {
+            const vertices = new Float32Array(meshData.vertices);
+            const indices = new Uint32Array(meshData.triangles);
+
+            const geometry = new THREE.BufferGeometry();
+            geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+            geometry.setIndex(new THREE.BufferAttribute(indices, 1));
+
+            // Compute normals automatically if not provided
+            if (meshData.normals && meshData.normals.length > 0) {
+                const normals = new Float32Array(meshData.normals);
+                geometry.setAttribute('normal', new THREE.BufferAttribute(normals, 3));
+            } else {
+                geometry.computeVertexNormals();
+            }
+
+            const material = new THREE.MeshPhongMaterial({
+                color: 0xf4a460,  // Wood-ish color
+                flatShading: false,
+                side: THREE.DoubleSide,
+                transparent: true,
+                opacity: 1.0
+            });
+
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.name = name;  // Store name for identification
+
+            // Add wireframe
+            const wireframe = new THREE.LineSegments(
+                new THREE.EdgesGeometry(geometry),
+                new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 1 })
+            );
+            mesh.add(wireframe);
+
+            return mesh;
+        }
+
+        // Load meshes from API response (handles both single mesh and multiple parts)
+        function loadMeshes(data) {
+            // Clear existing meshes
+            Object.values(meshes).forEach(m => scene.remove(m));
+            meshes = {};
+
+            if (data.parts) {
+                // Multiple parts - flat view
+                for (const [name, meshData] of Object.entries(data.parts)) {
+                    const mesh = createMeshFromData(meshData, name);
+                    meshes[name] = mesh;
+                    scene.add(mesh);
+                }
+                updateObjectsPanel();
+            } else if (data.mesh) {
+                // Single mesh - assembled view
+                const mesh = createMeshFromData(data.mesh, 'assembled');
+                meshes['assembled'] = mesh;
+                scene.add(mesh);
+                updateObjectsPanel();
+            }
+        }
+
+        // API calls
+        async function loadParts() {
+            const response = await fetch('/api/parts');
+            const data = await response.json();
+
+            const partList = document.getElementById('part-list');
+            partList.innerHTML = '';
+
+            data.parts.forEach(part => {
+                const li = document.createElement('li');
+                li.className = 'part-item';
+                li.textContent = part;
+                li.onclick = () => selectPart(part);
+                partList.appendChild(li);
+            });
+        }
+
+        async function selectPart(partName) {
+            currentPart = partName;
+
+            // Update active state
+            document.querySelectorAll('.part-item').forEach(item => {
+                item.classList.toggle('active', item.textContent === partName);
+            });
+
+            // Load part info
+            const response = await fetch(`/api/part/${partName}`);
+            const data = await response.json();
+
+            if (data.success) {
+                const infoBox = document.getElementById('part-info');
+                infoBox.innerHTML = `
+                    <strong>${data.metadata.name}</strong> ${data.metadata.version}<br>
+                    ${data.metadata.description}<br>
+                    <br>
+                    <strong>Material:</strong> ${data.metadata.material}<br>
+                    <strong>Thickness:</strong> ${data.metadata.stock_thickness}mm
+                `;
+
+                // Show parameters
+                const paramsTabBtn = document.getElementById('parameters-tab-btn');
+                const paramsContainer = document.getElementById('parameters-container');
+                paramsContainer.innerHTML = '';
+
+                if (Object.keys(data.parameters).length > 0) {
+                    paramsTabBtn.classList.remove('hidden');
+
+                    for (const [key, value] of Object.entries(data.parameters)) {
+                        if (typeof value === 'number') {
+                            const div = document.createElement('div');
+                            div.className = 'param-group';
+                            div.innerHTML = `
+                                <label>${key.replace(/_/g, ' ')}</label>
+                                <input type="number" id="param-${key}" value="${value}" step="0.1">
+                            `;
+                            paramsContainer.appendChild(div);
+                        }
+                    }
+                }
+
+                // Load preview
+                await updatePreview();
+            }
+        }
+
+        async function updatePreview() {
+            if (!currentPart) return;
+
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('status').textContent = 'Generating preview...';
+
+            // Get parameters
+            const params = {};
+            document.querySelectorAll('[id^="param-"]').forEach(input => {
+                const key = input.id.replace('param-', '');
+                params[key] = parseFloat(input.value);
+            });
+
+            // Add view mode to params
+            params['view_mode'] = currentViewMode;
+
+            const queryString = new URLSearchParams(params).toString();
+            const response = await fetch(`/api/part/${currentPart}/preview?${queryString}`);
+            const data = await response.json();
+
+            document.getElementById('loading').classList.add('hidden');
+
+            if (data.success) {
+                loadMeshes(data);
+                document.getElementById('status').textContent = 'Preview loaded';
+            } else {
+                document.getElementById('status').textContent = 'Error: ' + data.error;
+            }
+        }
+
+        function positionPartsOnSurface() {
+            try {
+                // Move all visible parts so their lowest Z is at Z=0 (build surface)
+                let minZ = Infinity;
+                let partCount = 0;
+
+                // Find the lowest Z coordinate among all visible meshes using world bounding box
+                Object.values(meshes).forEach(mesh => {
+                    if (mesh.visible) {
+                        try {
+                            // Get world-space bounding box (accounts for position, rotation, scale)
+                            const bbox = new THREE.Box3().setFromObject(mesh);
+                            if (bbox.min && bbox.max && isFinite(bbox.min.z)) {
+                                minZ = Math.min(minZ, bbox.min.z);
+                                partCount++;
+                            }
+                        } catch (e) {
+                            console.error('Error calculating bounding box for mesh:', mesh.name, e);
+                        }
+                    }
+                });
+
+                if (partCount === 0) {
+                    document.getElementById('status').textContent = 'No visible parts to position';
+                    return;
+                }
+
+                // Move all parts up by -minZ to ensure lowest point is exactly at Z=0
+                // Only skip if already very close to zero (within 0.1mm tolerance)
+                if (minZ !== Infinity && minZ < -0.1) {
+                    const offset = -minZ;
+                    Object.values(meshes).forEach(mesh => {
+                        if (mesh.visible) {
+                            mesh.position.z += offset;
+                        }
+                    });
+
+                    document.getElementById('status').textContent = `Parts positioned on build surface (moved up ${offset.toFixed(2)}mm, ${partCount} parts)`;
+                    render();
+                } else if (minZ !== Infinity && Math.abs(minZ) <= 0.1) {
+                    document.getElementById('status').textContent = `Parts already on build surface (lowest point: ${minZ.toFixed(3)}mm, ${partCount} parts)`;
+                } else {
+                    document.getElementById('status').textContent = `Parts are ${minZ.toFixed(2)}mm above surface - use this button to lower them`;
+                }
+            } catch (error) {
+                console.error('Error in positionPartsOnSurface:', error);
+                document.getElementById('status').textContent = `Error positioning parts: ${error.message}`;
+            }
+        }
+
+        function centerVisibleParts() {
+            // Calculate combined bounding box of all visible parts using world coordinates
+            const combinedBox = new THREE.Box3();
+            let hasVisibleParts = false;
+
+            Object.values(meshes).forEach(mesh => {
+                if (mesh.visible) {
+                    const bbox = new THREE.Box3().setFromObject(mesh);
+                    combinedBox.union(bbox);
+                    hasVisibleParts = true;
+                }
+            });
+
+            if (hasVisibleParts) {
+                // Get the lower-left corner (minimum X and Y)
+                const minX = combinedBox.min.x;
+                const minY = combinedBox.min.y;
+
+                // Small positive offset from origin (5mm) for safety margin
+                const targetX = 5;
+                const targetY = 5;
+
+                // Calculate offset to move lower-left corner to target position
+                const offsetX = targetX - minX;
+                const offsetY = targetY - minY;
+
+                // Apply offset to all visible parts
+                Object.values(meshes).forEach(mesh => {
+                    if (mesh.visible) {
+                        mesh.position.x += offsetX;
+                        mesh.position.y += offsetY;
+                    }
+                });
+
+                // Track cumulative offset for toolpath alignment
+                partOffsetX += offsetX;
+                partOffsetY += offsetY;
+
+                // Apply same offset to toolpath group if it exists
+                if (toolpathGroup) {
+                    toolpathGroup.position.x = partOffsetX;
+                    toolpathGroup.position.y = partOffsetY;
+                }
+
+                // Apply same offset to simulation tool if it exists
+                if (simulationTool) {
+                    simulationTool.position.x += offsetX;
+                    simulationTool.position.y += offsetY;
+                }
+
+                document.getElementById('status').textContent = `Parts positioned at origin (offset: X${offsetX.toFixed(2)}mm, Y${offsetY.toFixed(2)}mm)`;
+                render();
+            }
+        }
+
+        function updateToolpathOriginInfo() {
+            const checkbox = document.getElementById('zero-to-lower-left');
+            const infoDiv = document.getElementById('toolpath-origin-info');
+
+            if (checkbox.checked) {
+                infoDiv.textContent = 'Toolpath origin will be at the lower-left corner of visible parts';
+            } else {
+                infoDiv.textContent = 'Toolpath origin will use part coordinates as-is';
+            }
+        }
+
+        function spacePartsForCutting() {
+            try {
+                // Get tool diameter from CAM settings
+                const toolDiameter = parseFloat(document.getElementById('tool-diameter').value);
+                if (isNaN(toolDiameter) || toolDiameter <= 0) {
+                    document.getElementById('status').textContent = 'Invalid tool diameter';
+                    return;
+                }
+
+                // Calculate spacing (3x tool diameter for comfortable clearance)
+                const spacing = toolDiameter * 3;
+
+                // Collect visible parts with their bounding boxes
+                const visibleParts = [];
+                Object.entries(meshes).forEach(([name, mesh]) => {
+                    if (mesh.visible) {
+                        const bbox = new THREE.Box3().setFromObject(mesh);
+                        const size = new THREE.Vector3();
+                        bbox.getSize(size);
+                        visibleParts.push({
+                            name: name,
+                            mesh: mesh,
+                            width: size.x,
+                            height: size.y,
+                            depth: size.z
+                        });
+                    }
+                });
+
+                if (visibleParts.length === 0) {
+                    document.getElementById('status').textContent = 'No visible parts to space';
+                    return;
+                }
+
+                // Arrange parts in a grid layout
+                const maxRowWidth = 1000; // Max width before wrapping to next row (mm)
+                let currentX = 0;
+                let currentY = 0;
+                let rowHeight = 0;
+
+                visibleParts.forEach(part => {
+                    // Check if we need to start a new row
+                    if (currentX > 0 && currentX + part.width > maxRowWidth) {
+                        currentX = 0;
+                        currentY -= (rowHeight + spacing);
+                        rowHeight = 0;
+                    }
+
+                    // Position this part
+                    part.mesh.position.x = currentX + part.width / 2;
+                    part.mesh.position.y = currentY - part.height / 2;
+
+                    // Update for next part
+                    currentX += part.width + spacing;
+                    rowHeight = Math.max(rowHeight, part.height);
+                });
+
+                document.getElementById('status').textContent =
+                    `Parts spaced with ${spacing.toFixed(1)}mm clearance (${visibleParts.length} parts)`;
+                render();
+            } catch (error) {
+                console.error('Error in spacePartsForCutting:', error);
+                document.getElementById('status').textContent = `Error spacing parts: ${error.message}`;
+            }
+        }
+
+        async function generateGCode() {
+            if (!currentPart) return;
+
+            const btn = document.getElementById('generate-btn');
+            btn.disabled = true;
+            btn.textContent = 'Generating...';
+            document.getElementById('status').textContent = 'Generating G-code...';
+
+            // Get parameters
+            const parameters = {};
+            document.querySelectorAll('[id^="param-"]').forEach(input => {
+                const key = input.id.replace('param-', '');
+                parameters[key] = parseFloat(input.value);
+            });
+
+            const camConfig = {
+                tool_diameter: parseFloat(document.getElementById('tool-diameter').value),
+                material_thickness: parseFloat(document.getElementById('material-thickness').value),
+                spindle_rpm: parseInt(document.getElementById('spindle-rpm').value),
+                feed_rate: parseFloat(document.getElementById('feed-rate').value),
+                zero_to_lower_left: document.getElementById('zero-to-lower-left').checked,
+                origin_x: 0.0,
+                origin_y: 0.0
+            };
+
+            const response = await fetch(`/api/part/${currentPart}/gcode`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ parameters, cam_config: camConfig })
+            });
+
+            const data = await response.json();
+
+            btn.disabled = false;
+            btn.textContent = 'Generate G-code';
+
+            if (data.success) {
+                // Download G-code
+                const blob = new Blob([data.gcode], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${currentPart}.nc`;
+                a.click();
+                URL.revokeObjectURL(url);
+
+                document.getElementById('status').textContent = `G-code generated (${data.lines} lines)`;
+            } else {
+                alert('Error generating G-code: ' + data.error);
+                document.getElementById('status').textContent = 'Error';
+            }
+        }
+
+        async function exportSTEP() {
+            if (!currentPart) return;
+
+            document.getElementById('status').textContent = 'Exporting STEP...';
+
+            const response = await fetch(`/api/part/${currentPart}/export/step`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({})
+            });
+
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${currentPart}.step`;
+                a.click();
+                URL.revokeObjectURL(url);
+                document.getElementById('status').textContent = 'STEP exported';
+            } else {
+                alert('Error exporting STEP');
+                document.getElementById('status').textContent = 'Error';
+            }
+        }
+
+        // Tool Library Management
+        let toolLibrary = null;
+
+        async function loadToolLibrary() {
+            try {
+                const response = await fetch('/api/tools');
+                toolLibrary = await response.json();
+
+                // Populate material dropdown
+                const materialSelect = document.getElementById('material-select');
+                materialSelect.innerHTML = '<option value="">Select material...</option>';
+                if (toolLibrary.materials) {
+                    toolLibrary.materials.forEach(material => {
+                        const option = document.createElement('option');
+                        option.value = material.id;
+                        option.textContent = material.name;
+                        materialSelect.appendChild(option);
+                    });
+                }
+
+                // Populate tool dropdown
+                const toolSelect = document.getElementById('tool-select');
+                toolSelect.innerHTML = '<option value="">Select tool...</option>';
+                if (toolLibrary.tools) {
+                    toolLibrary.tools.forEach(tool => {
+                        const option = document.createElement('option');
+                        option.value = tool.id;
+                        option.textContent = tool.name;
+                        toolSelect.appendChild(option);
+                    });
+                }
+
+                // Set default to plywood
+                materialSelect.value = 'plywood';
+            } catch (error) {
+                console.error('Error loading tool library:', error);
+            }
+        }
+
+        function onMaterialChange() {
+            // Reset tool selection when material changes
+            document.getElementById('tool-select').value = '';
+            document.getElementById('tool-notes').textContent = '';
+        }
+
+        function onToolChange() {
+            const toolSelect = document.getElementById('tool-select');
+            const materialSelect = document.getElementById('material-select');
+            const selectedToolId = toolSelect.value;
+            const selectedMaterial = materialSelect.value;
+
+            if (!selectedToolId || !toolLibrary) return;
+
+            // Find selected tool
+            const tool = toolLibrary.tools.find(t => t.id === selectedToolId);
+            if (!tool) return;
+
+            // Update tool notes
+            const notesDiv = document.getElementById('tool-notes');
+            notesDiv.textContent = tool.notes ? `${tool.type} - ${tool.notes}` : tool.type;
+
+            // Update tool diameter
+            document.getElementById('tool-diameter').value = tool.diameter_mm.toFixed(2);
+
+            // If material is selected, update cutting parameters
+            if (selectedMaterial && toolLibrary.cutting_params) {
+                const materialParams = toolLibrary.cutting_params[selectedMaterial];
+                if (materialParams) {
+                    // Find params for this tool diameter
+                    const diameterStr = tool.diameter_mm.toString();
+                    const params = materialParams[diameterStr];
+                    if (params) {
+                        document.getElementById('spindle-rpm').value = params.rpm;
+                        document.getElementById('feed-rate').value = params.feed_rate;
+                        document.getElementById('depth-of-cut').value = params.depth_of_cut;
+
+                        document.getElementById('status').textContent =
+                            `Loaded ${tool.name} parameters for ${selectedMaterial}`;
+                    } else {
+                        document.getElementById('status').textContent =
+                            `No cutting params for ${tool.diameter_mm}mm in ${selectedMaterial} - using current values`;
+                    }
+                }
+            }
+        }
+
+        async function saveProject() {
+            const projectName = document.getElementById('project-name').value.trim();
+            if (!projectName) {
+                alert('Please enter a project name');
+                return;
+            }
+
+            if (!currentPart) {
+                alert('No part loaded');
+                return;
+            }
+
+            // Collect current state
+            const projectData = {
+                part_name: currentPart,
+                view_mode: currentViewMode,
+                parameters: {},
+                cam_settings: {
+                    tool_diameter: parseFloat(document.getElementById('tool-diameter').value),
+                    material_thickness: parseFloat(document.getElementById('material-thickness').value),
+                    spindle_rpm: parseInt(document.getElementById('spindle-rpm').value),
+                    feed_rate: parseFloat(document.getElementById('feed-rate').value),
+                    depth_of_cut: parseFloat(document.getElementById('depth-of-cut').value),
+                    zero_to_lower_left: document.getElementById('zero-to-lower-left').checked
+                },
+                part_positions: {}
+            };
+
+            // Collect part parameters
+            document.querySelectorAll('[id^="param-"]').forEach(input => {
+                const key = input.id.replace('param-', '');
+                projectData.parameters[key] = parseFloat(input.value);
+            });
+
+            // Collect part positions and visibility
+            Object.keys(meshes).forEach(name => {
+                const mesh = meshes[name];
+                projectData.part_positions[name] = {
+                    position: {x: mesh.position.x, y: mesh.position.y, z: mesh.position.z},
+                    visible: mesh.visible
+                };
+            });
+
+            document.getElementById('status').textContent = 'Saving project...';
+
+            const response = await fetch(`/api/projects/${projectName}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(projectData)
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                document.getElementById('status').textContent = `Project '${projectName}' saved`;
+            } else {
+                alert(`Error saving project: ${data.error}`);
+                document.getElementById('status').textContent = 'Error saving project';
+            }
+        }
+
+        async function loadProjectDialog() {
+            // Fetch available projects
+            const response = await fetch('/api/projects');
+            const data = await response.json();
+
+            if (!data.success || data.projects.length === 0) {
+                alert('No saved projects found');
+                return;
+            }
+
+            // Show simple prompt (we'll improve this UI later)
+            const projectNames = data.projects.map(p => p.name).join('\n');
+            const projectName = prompt(`Enter project name to load:\n\nAvailable projects:\n${projectNames}`);
+
+            if (projectName) {
+                await loadProjectByName(projectName);
+            }
+        }
+
+        async function loadProjectByName(projectName) {
+            document.getElementById('status').textContent = 'Loading project...';
+
+            const response = await fetch(`/api/projects/${projectName}`);
+            const data = await response.json();
+
+            if (!data.success) {
+                alert(`Error loading project: ${data.error}`);
+                document.getElementById('status').textContent = 'Error loading project';
+                return;
+            }
+
+            const project = data.project;
+
+            // Set project name
+            document.getElementById('project-name').value = projectName;
+
+            // Load part if different
+            if (project.part_name && project.part_name !== currentPart) {
+                await selectPart(project.part_name);
+            }
+
+            // Set parameters
+            if (project.parameters) {
+                Object.keys(project.parameters).forEach(key => {
+                    const input = document.getElementById(`param-${key}`);
+                    if (input) {
+                        input.value = project.parameters[key];
+                    }
+                });
+                await updatePreview();
+            }
+
+            // Set CAM settings
+            if (project.cam_settings) {
+                const settings = project.cam_settings;
+                if (settings.tool_diameter) document.getElementById('tool-diameter').value = settings.tool_diameter;
+                if (settings.material_thickness) document.getElementById('material-thickness').value = settings.material_thickness;
+                if (settings.spindle_rpm) document.getElementById('spindle-rpm').value = settings.spindle_rpm;
+                if (settings.feed_rate) document.getElementById('feed-rate').value = settings.feed_rate;
+                if (settings.depth_of_cut) document.getElementById('depth-of-cut').value = settings.depth_of_cut;
+                if (settings.zero_to_lower_left !== undefined) {
+                    document.getElementById('zero-to-lower-left').checked = settings.zero_to_lower_left;
+                    updateToolpathOriginInfo();
+                }
+            }
+
+            // Restore part positions after a brief delay (to allow meshes to load)
+            setTimeout(() => {
+                if (project.part_positions) {
+                    Object.keys(project.part_positions).forEach(name => {
+                        const mesh = meshes[name];
+                        const saved = project.part_positions[name];
+                        if (mesh && saved) {
+                            if (saved.position) {
+                                mesh.position.set(saved.position.x, saved.position.y, saved.position.z);
+                            }
+                            if (saved.visible !== undefined) {
+                                mesh.visible = saved.visible;
+                            }
+                        }
+                    });
+                    render();
+                }
+
+                // Set view mode
+                if (project.view_mode) {
+                    toggleViewMode(project.view_mode);
+                }
+
+                document.getElementById('status').textContent = `Project '${projectName}' loaded`;
+            }, 1000);
+        }
+
+        // Initialize
+        initScene();
+        initViewCube();
+        loadParts();
+        loadToolLibrary();
+    </script>
+</body>
+</html>

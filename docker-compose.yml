@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  cnc-studio:
+    build:
+      context: .
+      dockerfile: Containerfile
+    container_name: cnc-design-studio
+    ports:
+      - "5000:5000"
+    volumes:
+      # Mount parts, lib, and exports directories for live editing
+      - ./parts:/app/parts
+      - ./lib:/app/lib
+      - ./exports:/app/exports
+    environment:
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+    restart: unless-stopped

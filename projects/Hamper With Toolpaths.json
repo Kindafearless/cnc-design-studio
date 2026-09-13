@@ -1,0 +1,67 @@
+{
+  "part_name": "hamper",
+  "view_mode": "flat",
+  "parameters": {
+    "bottom_slot_depth": 6,
+    "clearance": 0.15,
+    "corner_radius": 3,
+    "depth": 300,
+    "finger_width": 25,
+    "handle_from_top": 100,
+    "handle_height": 40,
+    "handle_width": 120,
+    "height": 600,
+    "thickness": 12,
+    "width": 400
+  },
+  "cam_settings": {
+    "tool_diameter": 6.35,
+    "material_thickness": 12,
+    "spindle_rpm": 18000,
+    "feed_rate": 1500,
+    "depth_of_cut": 3,
+    "zero_to_lower_left": true
+  },
+  "part_positions": {
+    "back": {
+      "position": {
+        "x": -227,
+        "y": 305,
+        "z": 0
+      },
+      "visible": true
+    },
+    "bottom": {
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "visible": false
+    },
+    "front": {
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "visible": false
+    },
+    "left": {
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "visible": false
+    },
+    "right": {
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "visible": false
+    }
+  }
+}

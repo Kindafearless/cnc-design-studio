@@ -1,0 +1,222 @@
+{
+  "tools": [
+    {
+      "id": "122",
+      "name": "#122 - 1/32\" Square",
+      "diameter_mm": 0.79,
+      "diameter_inch": 0.03125,
+      "flutes": 2,
+      "type": "flat end mill",
+      "material": "Carbide",
+      "notes": "Carbide 3D tool #122"
+    },
+    {
+      "id": "301",
+      "name": "#301 - 90 Deg V-bit",
+      "diameter_mm": 12.7,
+      "diameter_inch": 0.5,
+      "flutes": 2,
+      "type": "counter sink",
+      "material": "Carbide",
+      "notes": "Carbide 3D tool #301"
+    },
+    {
+      "id": "111",
+      "name": "#111 - 1/16\" Ballnose",
+      "diameter_mm": 1.59,
+      "diameter_inch": 0.0625,
+      "flutes": 2,
+      "type": "ball end mill",
+      "material": "Carbide",
+      "notes": "Carbide 3D tool #111"
+    },
+    {
+      "id": "101",
+      "name": "#101 - 1/8\" Ballnose",
+      "diameter_mm": 3.17,
+      "diameter_inch": 0.125,
+      "flutes": 2,
+      "type": "ball end mill",
+      "material": "Carbide",
+      "notes": "Carbide 3D tool #101"
+    },
+    {
+      "id": "102",
+      "name": "#102 - 1/8\" Square",
+      "diameter_mm": 3.17,
+      "diameter_inch": 0.125,
+      "flutes": 2,
+      "type": "flat end mill",
+      "material": "Carbide",
+      "notes": "Carbide 3D tool #102"
+    },
+    {
+      "id": "121",
+      "name": "#121 - 1/32\" Ballnose",
+      "diameter_mm": 0.79,
+      "diameter_inch": 0.03125,
+      "flutes": 2,
+      "type": "ball end mill",
+      "material": "Carbide",
+      "notes": "Carbide 3D tool #121"
+    },
+    {
+      "id": "201",
+      "name": "#201 - 1/4\" Square",
+      "diameter_mm": 6.35,
+      "diameter_inch": 0.25,
+      "flutes": 3,
+      "type": "flat end mill",
+      "material": "Carbide",
+      "notes": "Carbide 3D tool #201"
+    },
+    {
+      "id": "302",
+      "name": "#302 - 60 Deg V-bit",
+      "diameter_mm": 11.11,
+      "diameter_inch": 0.4375,
+      "flutes": 2,
+      "type": "counter sink",
+      "material": "Carbide",
+      "notes": "Carbide 3D tool #302"
+    },
+    {
+      "id": "112",
+      "name": "#112 - 1/16\" Square",
+      "diameter_mm": 1.59,
+      "diameter_inch": 0.0625,
+      "flutes": 2,
+      "type": "flat end mill",
+      "material": "Carbide",
+      "notes": "Carbide 3D tool #112"
+    },
+    {
+      "id": "202",
+      "name": "#202 - 1/4\" Ballnose",
+      "diameter_mm": 6.35,
+      "diameter_inch": 0.25,
+      "flutes": 3,
+      "type": "ball end mill",
+      "material": "Carbide",
+      "notes": "Carbide 3D tool #202"
+    }
+  ],
+  "cutting_params": {
+    "aluminum": {
+      "0.79": {
+        "rpm": 16000,
+        "feed_rate": 610.0,
+        "plunge_rate": 254.0,
+        "depth_of_cut": 0.25,
+        "stepover": 0.4
+      },
+      "3.17": {
+        "rpm": 16000,
+        "feed_rate": 610.0,
+        "plunge_rate": 254.0,
+        "depth_of_cut": 0.25,
+        "stepover": 0.4
+      },
+      "6.35": {
+        "rpm": 16000,
+        "feed_rate": 610.0,
+        "plunge_rate": 254.0,
+        "depth_of_cut": 0.25,
+        "stepover": 0.4
+      },
+      "1.59": {
+        "rpm": 16000,
+        "feed_rate": 610.0,
+        "plunge_rate": 254.0,
+        "depth_of_cut": 0.25,
+        "stepover": 0.4
+      }
+    },
+    "hardwood": {
+      "3.17": {
+        "rpm": 18000,
+        "feed_rate": 1143.0,
+        "plunge_rate": 381.0,
+        "depth_of_cut": 0.76,
+        "stepover": 0.4
+      },
+      "6.35": {
+        "rpm": 18000,
+        "feed_rate": 1200,
+        "plunge_rate": 300,
+        "depth_of_cut": 2.5,
+        "stepover": 0.4
+      }
+    },
+    "softwood": {
+      "3.17": {
+        "rpm": 18000,
+        "feed_rate": 1524.0,
+        "plunge_rate": 457.0,
+        "depth_of_cut": 1.14,
+        "stepover": 0.4
+      },
+      "6.35": {
+        "rpm": 18000,
+        "feed_rate": 1800,
+        "plunge_rate": 500,
+        "depth_of_cut": 3.5,
+        "stepover": 0.4
+      }
+    },
+    "plywood": {
+      "3.17": {
+        "rpm": 18000,
+        "feed_rate": 1524.0,
+        "plunge_rate": 457.0,
+        "depth_of_cut": 1.14,
+        "stepover": 0.4
+      },
+      "6.35": {
+        "rpm": 18000,
+        "feed_rate": 1500,
+        "plunge_rate": 400,
+        "depth_of_cut": 3.0,
+        "stepover": 0.4
+      }
+    },
+    "mdf": {
+      "3.17": {
+        "rpm": 18000,
+        "feed_rate": 1600,
+        "plunge_rate": 450,
+        "depth_of_cut": 1.2,
+        "stepover": 0.4
+      },
+      "6.35": {
+        "rpm": 18000,
+        "feed_rate": 1800,
+        "plunge_rate": 450,
+        "depth_of_cut": 3.5,
+        "stepover": 0.4
+      }
+    }
+  },
+  "materials": [
+    {
+      "id": "aluminum",
+      "name": "Aluminum 6061"
+    },
+    {
+      "id": "hardwood",
+      "name": "Hardwood (Oak, Maple)"
+    },
+    {
+      "id": "softwood",
+      "name": "Softwood (Pine, Cedar)"
+    },
+    {
+      "id": "plywood",
+      "name": "Plywood"
+    },
+    {
+      "id": "mdf",
+      "name": "MDF"
+    }
+  ]
+}
