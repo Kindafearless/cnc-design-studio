@@ -14,7 +14,7 @@ ocp-vscode = "^2.7.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.0.0"
-black = "^24.0.0"
+black = ">=24,<27"
 
 [build-system]
 requires = ["poetry-core"]
